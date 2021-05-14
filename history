@@ -1,0 +1,79 @@
+https://blog.csdn.net/ARPOSPF/article/details/105092544
+Ubuntu下如何查看用户登录及用户操作历史相关信息
+在ubuntu下如何查看相关用户登录历史，用户操作历史，进行系统的日志跟踪和分析，以便发现系统登录问题，进行安全策略防护呢？
+
+使用who命令查看当前用户登录状况
+ubuntu@ubuntu-xz:~$ who
+ubuntu-xz pts/3        2020-03-25 08:22 (100.100.89.82)
+1
+2
+使用last命令查看最近登录情况
+last命令列出最近一段时间的用户登录时间及ip记录。（单独执行last指令，它会读取位于/var/log目录下，名称为wtmp的文件，并把该给文件的内容记录的登入系统的用户名单全部显示出来）
+
+root@ubuntu-xz:/home/ubuntu-xz# last
+ubuntu-xz  pts/1        :0               Thu May 21 12:54   still logged in   
+1
+2
+使用lastlog命令查看各个用户登录情况
+lastlog命令列出了各个用户的登录情况，如果没有登录过，则显示Never logged in，如果有登录历史，则显示出ip及登录时间。
+
+ubuntu@ubuntu-xz:~$ lastlog
+Username         Port     From             Latest
+root             pts/63   10.163.237.135   Wed Mar 25 12:49:51 +0800 2020
+daemon                                     **Never logged in**
+bin                                        **Never logged in**
+sys                                        **Never logged in**
+
+1
+2
+3
+4
+5
+6
+7
+查看/var/log/auth.log文件，分析用户登录及行为
+通过查看auth.log，可以分析出用户尝试登录情况，以及退出历史；
+
+ubuntu@ubuntu-xz:~$ cat /var/log/auth.log |more
+Mar  2 06:38:28 fuelhost CRON[20583]: pam_unix(cron:session): session closed for user root
+Mar  2 06:40:01 fuelhost CRON[20889]: pam_unix(cron:session): session opened for user root by (uid=0)
+Mar  2 06:40:01 fuelhost CRON[20889]: pam_unix(cron:session): session closed for user root
+Mar  2 06:50:01 fuelhost CRON[20898]: pam_unix(cron:session): session opened for user root by (uid=0)
+Mar  2 06:50:01 fuelhost CRON[20898]: pam_unix(cron:session): session closed for user root
+
+1
+2
+3
+4
+5
+6
+7
+查看 /home/{username}/.bash_history，可以查看用户的操作记录
+ubuntu@ubuntu-xz:~$ cat /home/ubuntu-xz/.bash_history |less
+1
+使用history命令显示执行时间和用户
+默认情况下使用history查看时是这样的显示，并不能区分执行时间
+253 history
+254 ifconfig
+255 route -n
+256 cd /tmp/
+为了方便排查问题，需要在每个执行命令前加上执行时间
+修改配置文件：
+
+ubuntu@ubuntu-xz:~$ sudo vim /etc/profile
+HISTTIMEFORMAT="%Y-%m-%d:%H-%M-%S:`whoami`: "
+export HISTTIMEFORMAT
+1
+2
+3
+执行生效：
+
+ubuntu@ubuntu-xz:~$ source /etc/profile
+1
+然后执行history查看可看到执行时间:
+253 2019-11-29:10-34-15:ubuntu-xz: history
+254 2019-11-29:10-34-16:ubuntu-xz: ifconfig
+255 2019-11-29:10-34-21:ubuntu-xz: route -n
+————————————————
+版权声明：本文为CSDN博主「游骑小兵」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/ARPOSPF/article/details/105092544
